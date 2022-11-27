@@ -53,7 +53,7 @@ class FileSystem {
     this.headers.set("Tags", "");
     this.headers.set("Use-Encryption", "1");
     this.headers.set("Encryption-Salt", ui8ArrayToHex(this.encryptionSalt));
-    this.headers.set("Encryption-Key-Hash", ui8ArrayToHex(await createHash512(this.masterKey)));
+    this.headers.set("Encryption-Key-Hash", ui8ArrayToHex(await createHash512(this.masterKey + EncryptionKeyHashSalt)));
 
     if (sourceData) {
       const data = new TextDecoder().decode(sourceData);
