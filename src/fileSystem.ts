@@ -1,5 +1,5 @@
-import { ForbiddenNameCharactersTest } from "./constants.js";
-import { getKey, getKeyMaterial } from "./crypto.js";
+import { DefaultEncryptionKey, EncryptionKeyHashSalt, ForbiddenNameCharactersTest } from "./constants.js";
+import { createHash512, getKey, getKeyMaterial } from "./crypto.js";
 import { ForbiddenCharactersError, InvalidNameError, InvalidOperationError } from "./errors.js";
 import {
   IFileSystemDirectory,
@@ -23,13 +23,13 @@ class FileSystem {
   public headers: Map<FileSystemHeaders, string>;
   public webhook: Webhook;
 
-  constructor(webhook: Webhook, masterKey: string) {
+  constructor(webhook: Webhook, masterKey?: string) {
     if (!webhook) {
       throw new Error("Required parameter missing: webhook");
     }
 
     this.webhook = webhook;
-    this.masterKey = masterKey;
+    this.masterKey = masterKey ?? DefaultEncryptionKey;
   }
 
   /**
@@ -53,6 +53,7 @@ class FileSystem {
     this.headers.set("Tags", "");
     this.headers.set("Use-Encryption", "1");
     this.headers.set("Encryption-Salt", ui8ArrayToHex(this.encryptionSalt));
+    this.headers.set("Encryption-Key-Hash", ui8ArrayToHex(await createHash512(this.masterKey)));
 
     if (sourceData) {
       const data = new TextDecoder().decode(sourceData);
@@ -75,6 +76,18 @@ class FileSystem {
           let [key, value] = [line.slice(0, colonIndex), line.slice(colonIndex + 1)];
           key = key.trim();
           value = value.trim();
+
+          if (key === "Encryption-Key-Hash") {
+            let givenKeyHash = ui8ArrayToHex(await createHash512(this.masterKey + EncryptionKeyHashSalt));
+            let storedKeyHash = ui8ArrayToHex(await createHash512(value + EncryptionKeyHashSalt));
+
+            if (givenKeyHash !== storedKeyHash) {
+              throw new Error(
+                "Invalid encryption key hash. The given key (passed to the constructor) doesn't match the key stored in the file.\n\nIs the encryption key correct? Keep in mind that encryption keys cannot be changed.",
+              );
+            }
+          }
+
           this.headers.set(key as FileSystemHeaders, value);
         } else {
           // Parse entry

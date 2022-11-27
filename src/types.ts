@@ -30,6 +30,7 @@ export type FileSystemHeaders =
   | "FileSystem-Version"
   | "Use-Encryption"
   | "Encryption-Salt"
+  | "Encryption-Key-Hash"
   | "Description"
   | "Creation-Date"
   | "Tags";

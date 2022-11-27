@@ -67,3 +67,11 @@ export const decrypt = (ciphertext: Uint8Array, iv: Uint8Array, key: CryptoKey) 
     ciphertext,
   );
 };
+
+export const createHash512 = async (data: string|Uint8Array) => {
+  if (typeof data === "string") {
+    data = new TextEncoder().encode(data);
+  }
+  
+  return new Uint8Array(await crypto.subtle.digest("SHA-512", data));
+}
