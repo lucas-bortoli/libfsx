@@ -3,22 +3,21 @@ export enum IFileSystemNodeType {
   Directory = 1,
 }
 
-export interface IFileSystemNode {
+export interface IFileSystemFile {
   name: string;
-  type: IFileSystemNodeType;
-}
-
-export interface IFileSystemFile extends IFileSystemNode {
   type: IFileSystemNodeType.File;
   size: number;
   creationDate: number;
   metaUrl: string;
 }
 
-export interface IFileSystemDirectory extends IFileSystemNode {
+export interface IFileSystemDirectory {
+  name: string;
   type: IFileSystemNodeType.Directory;
   children: IFileSystemNode[];
 }
+
+export type IFileSystemNode = IFileSystemFile | IFileSystemDirectory;
 
 export type FileChunk = {
   size: number;
