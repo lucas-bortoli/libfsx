@@ -34,6 +34,7 @@ class DownloadStream {
     this.chunks = chunks;
     this.chunkIndex = 0;
     this.done = false;
+    this.currentBytes = 0;
     this.totalBytes = chunks.reduce((a, b) => a + b.size, 0);
 
     this.stream = new ReadableStream({

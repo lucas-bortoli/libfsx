@@ -276,7 +276,8 @@ class FileSystem {
   public async beginUpload(fileName: string) {
     const stream = new UploadStream(this.webhook, this.encryptionKey);
 
-    stream.waitUntilDone().then(async () => {
+    //@ts-ignore
+    stream._onCloseInternalListener = async () => {
       const metaFileUrl = await this.createMetaFile(stream.chunks);
 
       this.setNode(dirname(fileName), {
@@ -286,7 +287,7 @@ class FileSystem {
         metaUrl: metaFileUrl,
         type: IFileSystemNodeType.File,
       } as IFileSystemFile);
-    });
+    };
 
     return stream;
   }

@@ -23,6 +23,8 @@ export default class UploadStream {
   private webhook: Webhook;
   private buffer: Uint8Array[];
 
+  private declare _onCloseInternalListener?: () => Promise<void>;
+
   /**
    * Starts a file upload to the server. Resolves with an array of links (chunks).
    * @param webhook Webhook where the files are uploaded.
@@ -58,7 +60,11 @@ export default class UploadStream {
       close: async () => {
         await this.flush();
 
-        console.log(`Stream closed.`);
+        // Call internal listener used for saving data to the filesystem
+        if (this._onCloseInternalListener) {
+          await this._onCloseInternalListener();
+        }
+
         this.done = true;
       },
 
@@ -86,8 +92,6 @@ export default class UploadStream {
    * Uploads the entire buffer to the webhook, and clears it.
    */
   private async flush() {
-    console.log(`Flushing ${this.bytesInBuffer()} bytes`);
-
     // Encrypt data
     const iv = crypto.getRandomValues(new Uint8Array(12));
 
