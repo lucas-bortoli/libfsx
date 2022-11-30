@@ -88,9 +88,8 @@ class FileSystem {
             let givenKeyHash = ui8ArrayToHex(
               await createHash512(this.masterKey + EncryptionKeyHashSalt),
             );
-            let storedKeyHash = ui8ArrayToHex(await createHash512(value + EncryptionKeyHashSalt));
-
-            if (givenKeyHash !== storedKeyHash) {
+            let storedKeyHash = value;
+            if (givenKeyHash !== storedKeyHash && sourceData) {
               throw new Error(
                 "Invalid encryption key hash. The given key (passed to the constructor) doesn't match the key stored in the file.\n\nIs the encryption key correct? Keep in mind that encryption keys cannot be changed.",
               );
