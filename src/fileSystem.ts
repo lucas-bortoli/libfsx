@@ -1,4 +1,8 @@
-import { DefaultEncryptionKey, EncryptionKeyHashSalt, ForbiddenNameCharactersTest } from "./constants.js";
+import {
+  DefaultEncryptionKey,
+  EncryptionKeyHashSalt,
+  ForbiddenNameCharactersTest,
+} from "./constants.js";
 import { createHash512, getKey, getKeyMaterial } from "./crypto.js";
 import { ForbiddenCharactersError, InvalidNameError, InvalidOperationError } from "./errors.js";
 import {
@@ -53,7 +57,10 @@ class FileSystem {
     this.headers.set("Tags", "");
     this.headers.set("Use-Encryption", "1");
     this.headers.set("Encryption-Salt", ui8ArrayToHex(this.encryptionSalt));
-    this.headers.set("Encryption-Key-Hash", ui8ArrayToHex(await createHash512(this.masterKey + EncryptionKeyHashSalt)));
+    this.headers.set(
+      "Encryption-Key-Hash",
+      ui8ArrayToHex(await createHash512(this.masterKey + EncryptionKeyHashSalt)),
+    );
 
     if (sourceData) {
       const data = new TextDecoder().decode(sourceData);
@@ -78,7 +85,9 @@ class FileSystem {
           value = value.trim();
 
           if (key === "Encryption-Key-Hash") {
-            let givenKeyHash = ui8ArrayToHex(await createHash512(this.masterKey + EncryptionKeyHashSalt));
+            let givenKeyHash = ui8ArrayToHex(
+              await createHash512(this.masterKey + EncryptionKeyHashSalt),
+            );
             let storedKeyHash = ui8ArrayToHex(await createHash512(value + EncryptionKeyHashSalt));
 
             if (givenKeyHash !== storedKeyHash) {

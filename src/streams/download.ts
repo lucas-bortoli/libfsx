@@ -1,5 +1,6 @@
 import { decrypt } from "../crypto.js";
 import { FileChunk } from "../types.js";
+import { sleep } from "../utils.js";
 
 class DownloadStream {
   /**
@@ -19,6 +20,8 @@ class DownloadStream {
    */
   public totalBytes: number;
 
+  public done: boolean;
+
   /**
    * Key used for decryption.
    */
@@ -30,6 +33,7 @@ class DownloadStream {
     this.key = key;
     this.chunks = chunks;
     this.chunkIndex = 0;
+    this.done = false;
     this.totalBytes = chunks.reduce((a, b) => a + b.size, 0);
 
     this.stream = new ReadableStream({
@@ -40,6 +44,7 @@ class DownloadStream {
         // Check if there are more chunks to be downloaded. If not, close this stream.
         if (this.chunkIndex >= this.chunks.length) {
           controller.close();
+          this.done = true;
           return;
         }
 
@@ -64,6 +69,14 @@ class DownloadStream {
     this.currentBytes += decrypted.byteLength;
 
     return decrypted;
+  }
+
+  public async waitUntilDone(): Promise<void> {
+    while (!this.done) {
+      await sleep(100);
+    }
+
+    return;
   }
 }
 
