@@ -224,34 +224,31 @@ class FileSystem {
   }
 
   public delete(path: string) {
-    const parentDirectory = dirname(path);
-    const segments = parentDirectory.split("/").filter((s) => s.length);
+    const segments = path.split("/").filter((s) => s.length);
+
+    if (segments.length < 1) {
+      throw new InvalidOperationError("Cannot delete root.");
+    }
 
     // Start search at the root directory
     let current: IFileSystemDirectory = this.root;
 
     while (segments.length) {
       const name = segments.shift() as string;
-      const isLastSegment = segments.length === 0;
+      const child = current.children.find((c) => c.name === name);
 
-      if (current.type === IFileSystemNodeType.Directory) {
-        let child = current.children.find((c) => c.name === name);
-
-        // Child doesn't exist.
-        if (!child || child.type !== IFileSystemNodeType.Directory) {
-          throw new InvalidOperationError("The given path doesn't exist.");
-        }
-
-        if (isLastSegment) {
-          // Delete it (only keep children that don't have this name)
-          current.children = current.children.filter((child) => child.name !== name);
-          break;
-        }
-
-        current = child as IFileSystemDirectory;
-      } else {
+      // Child doesn't exist.
+      if (!child) {
         throw new InvalidOperationError("The given path doesn't exist.");
       }
+
+      if (segments.length === 0) {
+        // Delete it (only keep children that don't have this name)
+        current.children = current.children.filter((child) => child.name !== name);
+        break;
+      }
+
+      current = child as IFileSystemDirectory;
     }
   }
 
@@ -273,9 +270,8 @@ class FileSystem {
 
     // If target is a directory, create the copy as a child of it.
     if (this.getNode(target)?.type === IFileSystemNodeType.Directory) {
-      target += `/${targetName}`;
-      targetDirname = dirname(target);
-      targetName = basename(target);
+      targetDirname = target;
+      targetName = basename(source);
     }
 
     const targetNode = structuredClone(sourceNode) as IFileSystemNode;
@@ -291,8 +287,27 @@ class FileSystem {
    * @param target Target path or directory.
    */
   public move(source: string, target: string) {
-    this.copy(source, target);
+    let targetDirname = dirname(target);
+    let targetName = basename(target);
+
+    const sourceNode = this.getNode(source);
+
+    if (!sourceNode) {
+      throw new InvalidOperationError("The given path doesn't exist.");
+    }
+
+    // If target is a directory, create the copy as a child of it.
+    if (this.getNode(target)?.type === IFileSystemNodeType.Directory) {
+      targetDirname = target;
+      targetName = basename(source);
+    }
+
+    const targetNode = structuredClone(sourceNode) as IFileSystemNode;
+
+    targetNode.name = targetName;
+
     this.delete(source);
+    this.setNode(targetDirname, targetNode);
   }
 
   /**
