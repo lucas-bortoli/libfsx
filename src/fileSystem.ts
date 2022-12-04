@@ -209,11 +209,106 @@ class FileSystem {
   }
 
   /**
+   * Creates a directory at the given path.
+   * @param path Path to the new directory
+   */
+  public createDirectory(path: string) {
+    const parent = dirname(path);
+    const name = basename(path);
+
+    this.setNode(parent, {
+      type: IFileSystemNodeType.Directory,
+      name: name,
+      children: [],
+    } as IFileSystemDirectory);
+  }
+
+  public delete(path: string) {
+    const parentDirectory = dirname(path);
+    const segments = parentDirectory.split("/").filter((s) => s.length);
+
+    // Start search at the root directory
+    let current: IFileSystemDirectory = this.root;
+
+    while (segments.length) {
+      const name = segments.shift() as string;
+      const isLastSegment = segments.length === 0;
+
+      if (current.type === IFileSystemNodeType.Directory) {
+        let child = current.children.find((c) => c.name === name);
+
+        // Child doesn't exist.
+        if (!child || child.type !== IFileSystemNodeType.Directory) {
+          throw new InvalidOperationError("The given path doesn't exist.");
+        }
+
+        if (isLastSegment) {
+          // Delete it (only keep children that don't have this name)
+          current.children = current.children.filter((child) => child.name !== name);
+          break;
+        }
+
+        current = child as IFileSystemDirectory;
+      } else {
+        throw new InvalidOperationError("The given path doesn't exist.");
+      }
+    }
+  }
+
+  /**
+   * Copies a node from the source path to the target path.
+   * IMPORTANT: This is a DESTRUCTIVE operation! If the target path already exists, it WILL be replaced.
+   * @param source Source path to be copied.
+   * @param target Target path or directory.
+   */
+  public copy(source: string, target: string) {
+    let targetDirname = dirname(target);
+    let targetName = basename(target);
+
+    const sourceNode = this.getNode(source);
+
+    if (!sourceNode) {
+      throw new InvalidOperationError("The given path doesn't exist.");
+    }
+
+    // If target is a directory, create the copy as a child of it.
+    if (this.getNode(target)?.type === IFileSystemNodeType.Directory) {
+      target += `/${targetName}`;
+      targetDirname = dirname(target);
+      targetName = basename(target);
+    }
+
+    const targetNode = structuredClone(sourceNode) as IFileSystemNode;
+
+    targetNode.name = targetName;
+
+    this.setNode(targetDirname, targetNode);
+  }
+
+  /**
+   * Moves a node from one directory to another.
+   * @param source Source path to be copied.
+   * @param target Target path or directory.
+   */
+  public move(source: string, target: string) {
+    this.copy(source, target);
+    this.delete(source);
+  }
+
+  /**
+   * Checks if a path exists.
+   * @param path The path to be tested.
+   */
+  public exists(path: string): boolean {
+    return !!this.getNode(path);
+  }
+
+  /**
    * Recursively iterates over every file in the given folder.
    * @param startDirectory Starting folder iteration
    * @param callback Callback to be called in every file found
    */
-  private async walkDirectory(
+  public async walkDirectory(
     startDirectory: IFileSystemDirectory,
     callback: (file: IFileSystemFile, path: string) => Promise<void>,
     _pathAcc: string[] = [],

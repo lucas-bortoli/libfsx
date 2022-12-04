@@ -11,7 +11,7 @@ export const dirname = (path: string) => {
 };
 
 export const basename = (path: string) => {
-  return path.split(/[\\/]/).pop();
+  return path.split(/[\\/]/).pop() || "";
 };
 
 export const ui8ArrayToHex = (arr: Uint8Array): string => {
