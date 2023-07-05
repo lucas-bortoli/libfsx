@@ -16,7 +16,7 @@ import {
 import UploadStream from "./streams/upload.js";
 import DownloadStream from "./streams/download.js";
 import { basename, dirname, hexToUi8Array, ui8ArrayToHex } from "./utils.js";
-import Webhook from "./webhook.js";
+import { webhookUpload } from "./webhook.js";
 
 class FileSystem {
   private root: IFileSystemDirectory;
@@ -25,9 +25,9 @@ class FileSystem {
   private masterKey: string;
 
   public headers: Map<FileSystemHeaders, string>;
-  public webhook: Webhook;
+  public webhook: string;
 
-  constructor(webhook: Webhook, masterKey?: string) {
+  constructor(webhook: string, masterKey?: string) {
     if (!webhook) {
       throw new Error("Required parameter missing: webhook");
     }
@@ -361,7 +361,7 @@ class FileSystem {
 
     const blob = encoder.encode(data.join("\n"));
 
-    return await this.webhook.upload("meta", [blob]);
+    return await webhookUpload(this.webhook, "meta", [blob]);
   }
 
   private async fetchMetaFile(link: string): Promise<FileChunk[]> {

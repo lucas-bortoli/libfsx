@@ -2,34 +2,30 @@ import { MaxChunkSize } from "../constants.js";
 import { encrypt } from "../crypto.js";
 import { FileChunk } from "../types.js";
 import { sleep } from "../utils.js";
-import Webhook from "../webhook.js";
+import { webhookUpload } from "../webhook.js";
 
 export default class UploadStream {
   public stream: WritableStream<Uint8Array>;
-
   /**
    * An array of uploaded file chunks.
    */
   public chunks: FileChunk[];
-
   public done: boolean;
-
   /**
    * Total number of bytes consumed by this stream.
    */
   public totalBytes: number;
+  public webhook: string;
 
   private key: CryptoKey;
-  private webhook: Webhook;
   private buffer: Uint8Array[];
-
   private declare _onCloseInternalListener?: () => Promise<void>;
 
   /**
    * Starts a file upload to the server. Resolves with an array of links (chunks).
    * @param webhook Webhook where the files are uploaded.
    */
-  constructor(webhook: Webhook, key: CryptoKey) {
+  constructor(webhook: string, key: CryptoKey) {
     this.key = key;
     this.webhook = webhook;
     this.buffer = [];
@@ -105,7 +101,7 @@ export default class UploadStream {
     }
 
     const data = await encrypt(raw, iv, this.key);
-    const link = await this.webhook.upload("blob", [data]);
+    const link = await webhookUpload(this.webhook, "blob", [data]);
 
     this.chunks.push({
       size: data.byteLength,

@@ -1,5 +1,5 @@
 import FileSystem from "./fileSystem.js";
-import Webhook from "./webhook.js";
+import { webhookUpload } from "./webhook.js";
 import DownloadStream from "./streams/download.js";
 import UploadStream from "./streams/upload.js";
 import * as Constants from "./constants.js";
@@ -15,7 +15,7 @@ import {
 
 export {
   FileSystem,
-  Webhook,
+  webhookUpload,
   DownloadStream,
   UploadStream,
   Constants,
@@ -27,3 +27,5 @@ export {
   FileChunk,
   FileSystemHeaders,
 };
+
+export default FileSystem;
