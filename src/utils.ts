@@ -1,3 +1,5 @@
+import { ForbiddenNameCharactersTest } from "./constants";
+
 /**
  * @param ms Number of milliseconds to wait
  * @returns A promise which resolves after the specified amount of time, in seconds.
@@ -26,4 +28,20 @@ export const hexToUi8Array = (hex: string): Uint8Array => {
     result.push(parseInt(hex.substr(i, 2), 16));
   }
   return Uint8Array.from(result);
+};
+
+/**
+ * Tests if the given file name is valid for a file under both Windows and Linux.
+ *
+ * @param {string} name - The file name to be tested.
+ * @returns {boolean} - Returns `true` if the file name is valid, `false` otherwise.
+ */
+export const isValidNameForEntry = (name: string): boolean => {
+  // Empty or whitespace-only names
+  if (name.trim().length < 1) {
+    return false;
+  }
+
+  // Has forbidden characters in the name?
+  return !ForbiddenNameCharactersTest.test(name);
 };
