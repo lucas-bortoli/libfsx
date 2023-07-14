@@ -19,17 +19,19 @@ export const webhookUpload = async (
 
   let response;
 
-  try {
-    response = await fetch(webhookUrl, {
-      method: "POST",
-      body: body,
-    }).then((r) => r.json());
-  } catch (error) {
-    console.error("Upload failed. Retrying...");
-    console.error(error);
+  do {
+    try {
+      response = await fetch(webhookUrl, {
+        method: "POST",
+        body: body,
+      }).then((r) => r.json());
+    } catch (error) {
+      console.error("Upload failed. Retrying...");
+      console.error(error);
 
-    await sleep(1000);
-  }
+      await sleep(1000);
+    }
+  } while (response?.attachments?.[0]?.url === undefined);
 
-  return response.attachments[0].url;
+  return response!.attachments[0].url;
 };

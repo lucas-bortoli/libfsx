@@ -64,12 +64,27 @@ class DownloadStream {
    * @returns The decrypted chunk.
    */
   private async getChunk(chunk: FileChunk) {
-    const ciphertext = await fetch(chunk.link).then((response) => response.arrayBuffer());
-    const decrypted = new Uint8Array(await decrypt(new Uint8Array(ciphertext), chunk.iv, this.key));
+    let tries = 0;
 
-    this.currentBytes += decrypted.byteLength;
+    while (tries < 3) {
+      tries++;
 
-    return decrypted;
+      try {
+        const ciphertext = await fetch(chunk.link).then((response) => response.arrayBuffer());
+        const decrypted = new Uint8Array(
+          await decrypt(new Uint8Array(ciphertext), chunk.iv, this.key),
+        );
+
+        this.currentBytes += decrypted.byteLength;
+
+        return decrypted;
+      } catch (error) {
+        console.error(`Chunk download failed. Try ${tries}`, error);
+        await sleep(1000 * (tries * 10));
+      }
+    }
+
+    throw new Error("Couldn't download chunk.");
   }
 
   public async waitUntilDone(): Promise<void> {
