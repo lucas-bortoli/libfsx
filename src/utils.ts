@@ -1,4 +1,4 @@
-import { ForbiddenNameCharactersTest } from "./constants";
+import { ForbiddenNameCharactersTest } from "./constants.js";
 
 /**
  * @param ms Number of milliseconds to wait
